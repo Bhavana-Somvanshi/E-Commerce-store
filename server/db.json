@@ -1,0 +1,153 @@
+{
+  "users": [
+    {
+      "id": "user_bSJlngdI70",
+      "email": "admin@example.com",
+      "passwordHash": "$2a$10$DPhP8oVSgpFU7Utc9o6LD.uJDITgaEeVRWHqG1YjDQNS6KYfhOQTu",
+      "role": "admin",
+      "createdAt": "2026-02-04T11:22:47.584Z"
+    }
+  ],
+  "refreshTokens": [
+    {
+      "jti": "uid1W9qcnu8CevCf",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:22:59.879Z",
+      "revokedAt": "2026-02-04T11:23:30.010Z"
+    },
+    {
+      "jti": "AuikOCuYgFCSWKl7",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:30.017Z",
+      "revokedAt": "2026-02-04T11:23:33.048Z"
+    },
+    {
+      "jti": "XuLoL4jSzFgPH-TQ",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:33.053Z"
+    },
+    {
+      "jti": "Uh0x5i0XQydf5Hl9",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:34.391Z",
+      "revokedAt": "2026-02-04T11:23:41.815Z"
+    },
+    {
+      "jti": "GMFnNBJprkX6WuFA",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:41.823Z"
+    },
+    {
+      "jti": "Sh8aqZ9VQK95Y40b",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:45.038Z",
+      "revokedAt": "2026-02-04T11:23:48.222Z"
+    },
+    {
+      "jti": "UcEpKSm5eYG8z6nS",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:48.226Z"
+    },
+    {
+      "jti": "-nWYk-VXl8_tENH-",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:23:53.247Z",
+      "revokedAt": "2026-02-04T11:31:37.912Z"
+    },
+    {
+      "jti": "dv_GxopOu3jmkb42",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:31:37.916Z"
+    },
+    {
+      "jti": "XeU2ymn4ICteOgjq",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:31:39.773Z",
+      "revokedAt": "2026-02-04T11:32:55.447Z"
+    },
+    {
+      "jti": "Kp_Scork1sddepH5",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:32:55.451Z"
+    },
+    {
+      "jti": "HJ8yIV80hgZbTLFz",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:33:01.836Z",
+      "revokedAt": "2026-02-04T11:35:23.428Z"
+    },
+    {
+      "jti": "22mgDBAGl1lTm6S9",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:35:23.430Z"
+    },
+    {
+      "jti": "TJbZ8FIyjYgnWsiC",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:35:56.256Z",
+      "revokedAt": "2026-02-04T11:35:59.604Z"
+    },
+    {
+      "jti": "9aky6Lyl3e03ZE7B",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:35:59.608Z",
+      "revokedAt": "2026-02-04T11:36:51.324Z"
+    },
+    {
+      "jti": "se5viQxsQnpZWVKQ",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T11:36:51.328Z"
+    },
+    {
+      "jti": "NBdQ9amoiBdd9boB",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:25:02.166Z",
+      "revokedAt": "2026-02-04T12:25:45.152Z"
+    },
+    {
+      "jti": "BpgXVgJ67hc0Lns_",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:25:45.155Z",
+      "revokedAt": "2026-02-04T12:25:48.635Z"
+    },
+    {
+      "jti": "FZJA7VAnHiUfxeOB",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:25:48.638Z",
+      "revokedAt": "2026-02-04T12:26:41.991Z"
+    },
+    {
+      "jti": "DAuzoeSXwCfCZmaR",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:26:41.993Z",
+      "revokedAt": "2026-02-04T12:26:53.007Z"
+    },
+    {
+      "jti": "-_cCfDDqETzGZU6Z",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:26:53.010Z",
+      "revokedAt": "2026-02-04T12:26:57.605Z"
+    },
+    {
+      "jti": "7KJAPGuSLIseq7HR",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-06T12:26:57.608Z",
+      "revokedAt": "2026-02-05T10:31:42.583Z"
+    },
+    {
+      "jti": "IP-kkCX4e8CfEMvW",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-07T04:37:29.740Z"
+    },
+    {
+      "jti": "Em0kP6wiY8ZdHIPv",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-07T10:31:42.592Z"
+    },
+    {
+      "jti": "7G7OOYHgJGPHDJkM",
+      "userId": "user_bSJlngdI70",
+      "expiresAt": "2026-03-11T10:49:16.777Z"
+    }
+  ]
+}
