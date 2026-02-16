@@ -32,7 +32,7 @@ const statCards = [
 ];
 
 export default function Dashboard() {
-  const { getDashboardStats, orders, products } = useAdmin();
+  const { getDashboardStats, orders, products, customers } = useAdmin();
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -209,11 +209,15 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="divide-y divide-gray-100">
-            {recentOrders.map((order) => (
+            {recentOrders.map((order) => {
+              const customer = customers.find((c) => c.id === order.customer_id);
+              return (
               <div key={order.id} className="p-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">{order.id}</p>
-                  <p className="text-sm text-gray-500">{order.customer}</p>
+                  <p className="text-sm text-gray-500">
+                    {customer?.name ?? customer?.email ?? order.customer_id}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-medium text-gray-900">
@@ -236,7 +240,8 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

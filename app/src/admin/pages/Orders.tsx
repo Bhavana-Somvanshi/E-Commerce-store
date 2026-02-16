@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
 import type { Order } from '../types';
 import {
   Dialog,
@@ -33,16 +34,18 @@ const statusOptions = [
 ];
 
 export default function Orders() {
-  const { orders, updateOrderStatus } = useAdmin();
+  const { orders, customers, updateOrderStatus } = useAdmin();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = orders.filter((order) => {
+    const customer = customers.find((c) => c.id === order.customer_id);
     const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchTerm.toLowerCase());
+      customer?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -160,12 +163,18 @@ export default function Orders() {
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <p className="font-medium text-gray-900">{order.customer}</p>
-                      <p className="text-sm text-gray-500">{order.email}</p>
+                      <p className="font-medium text-gray-900">
+                        {customers.find((c) => c.id === order.customer_id)?.name ??
+                          customers.find((c) => c.id === order.customer_id)?.email ??
+                          order.customer_id}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {customers.find((c) => c.id === order.customer_id)?.email ?? '—'}
+                      </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
-                    {formatDate(order.createdAt)}
+                    {formatDate(order.created_at)}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -179,20 +188,20 @@ export default function Orders() {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        order.paymentStatus === 'paid'
+                        order.payment_status === 'paid'
                           ? 'bg-green-100 text-green-800'
-                          : order.paymentStatus === 'pending'
+                          : order.payment_status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'
-                          : order.paymentStatus === 'refunded'
+                          : order.payment_status === 'refunded'
                           ? 'bg-gray-100 text-gray-800'
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {order.paymentStatus}
+                      {order.payment_status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right font-medium text-gray-900">
-                    ${order.total.toFixed(2)}
+                    ${Number(order.total).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <DropdownMenu>
@@ -206,7 +215,9 @@ export default function Orders() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                        {order.status !== 'delivered' &&
+                          order.status !== 'cancelled' &&
+                          user?.role === 'admin' && (
                           <>
                             {order.status === 'pending' && (
                               <DropdownMenuItem
@@ -234,7 +245,9 @@ export default function Orders() {
                             )}
                           </>
                         )}
-                        {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                        {order.status !== 'cancelled' &&
+                          order.status !== 'delivered' &&
+                          user?.role === 'admin' && (
                           <DropdownMenuItem
                             onClick={() => updateOrderStatus(order.id, 'cancelled')}
                             className="text-red-600"
@@ -276,7 +289,7 @@ export default function Orders() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-500">Order Date</p>
                   <p className="font-medium text-gray-900">
-                    {formatDate(selectedOrder.createdAt)}
+                    {formatDate(selectedOrder.created_at)}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -295,9 +308,15 @@ export default function Orders() {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Customer Information</h4>
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <p className="font-medium text-gray-900">{selectedOrder.customer}</p>
-                  <p className="text-gray-600">{selectedOrder.email}</p>
-                  <p className="text-gray-600">{selectedOrder.shippingAddress}</p>
+                  <p className="font-medium text-gray-900">
+                    {customers.find((c) => c.id === selectedOrder.customer_id)?.name ??
+                      customers.find((c) => c.id === selectedOrder.customer_id)?.email ??
+                      selectedOrder.customer_id}
+                  </p>
+                  <p className="text-gray-600">
+                    {customers.find((c) => c.id === selectedOrder.customer_id)?.email ?? '—'}
+                  </p>
+                  <p className="text-gray-600">{selectedOrder.shipping_address}</p>
                 </div>
               </div>
 
@@ -305,14 +324,15 @@ export default function Orders() {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Order Items</h4>
                 <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
-                  {selectedOrder.items.map((item, index) => (
+                  {Array.isArray(selectedOrder.items) &&
+                    selectedOrder.items.map((item, index) => (
                     <div key={index} className="p-4 flex items-center justify-between">
                       <div>
                         <p className="font-medium text-gray-900">{item.name}</p>
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                       </div>
                       <p className="font-medium text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${(Number(item.price) * Number(item.quantity)).toFixed(2)}
                       </p>
                     </div>
                   ))}
@@ -323,12 +343,14 @@ export default function Orders() {
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <p className="text-lg font-semibold text-gray-900">Total</p>
                 <p className="text-2xl font-bold text-[#ff4b2f]">
-                  ${selectedOrder.total.toFixed(2)}
+                  ${Number(selectedOrder.total).toFixed(2)}
                 </p>
               </div>
 
               {/* Actions */}
-              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
+              {selectedOrder.status !== 'delivered' &&
+                selectedOrder.status !== 'cancelled' &&
+                user?.role === 'admin' && (
                 <div className="flex gap-2">
                   {selectedOrder.status === 'pending' && (
                     <button

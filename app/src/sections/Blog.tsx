@@ -1,11 +1,25 @@
 import { ArrowRight, Calendar } from 'lucide-react';
-import { blogPosts } from '@/data/products';
+import { blogPosts as fallbackPosts } from '@/data/products';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { usePublicApi } from '@/hooks/usePublicApi';
+import type { BlogPost } from '@/types';
 
 export default function Blog() {
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
-  const featuredPost = blogPosts.find((p) => p.featured);
-  const regularPosts = blogPosts.filter((p) => !p.featured);
+  const apiPosts = usePublicApi<Partial<BlogPost>[]>('/blogs', fallbackPosts);
+  const normalizedPosts = apiPosts.map((post, index) => ({
+    ...post,
+    date:
+      post.date ??
+      new Date(post.created_at ?? Date.now()).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    featured: post.featured ?? index === 0,
+  })) as BlogPost[];
+  const featuredPost = normalizedPosts.find((p) => p.featured);
+  const regularPosts = normalizedPosts.filter((p) => !p.featured);
 
   return (
     <section id="blog" className="section-padding bg-[#f9f9f9]" ref={sectionRef}>

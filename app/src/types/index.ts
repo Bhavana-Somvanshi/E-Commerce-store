@@ -38,6 +38,7 @@ export interface BlogPost {
   date: string;
   category: string;
   featured?: boolean;
+  created_at?: string;
 }
 
 export interface NavLink {

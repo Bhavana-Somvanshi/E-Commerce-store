@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
-import { testimonials } from '@/data/products';
+import { testimonials as fallbackTestimonials } from '@/data/products';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { usePublicApi } from '@/hooks/usePublicApi';
+import type { Testimonial } from '@/types';
 
 export default function Testimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const apiTestimonials = usePublicApi<Testimonial[]>('/reviews', fallbackTestimonials);
+  const testimonials = apiTestimonials.length > 0 ? apiTestimonials : fallbackTestimonials;
 
   const nextSlide = () => {
+    if (testimonials.length === 0) return;
     setActiveIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevSlide = () => {
+    if (testimonials.length === 0) return;
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 

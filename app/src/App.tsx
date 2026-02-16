@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CartProvider } from '@/context/CartContext';
+import { CustomerAuthProvider } from '@/context/CustomerAuthContext';
 import Header from '@/sections/Header';
 import Hero from '@/sections/Hero';
 import BrandPartners from '@/sections/BrandPartners';
@@ -12,6 +13,9 @@ import CTA from '@/sections/CTA';
 import Newsletter from '@/sections/Newsletter';
 import Footer from '@/sections/Footer';
 import AdminRouter from './admin/AdminRouter';
+import LoginPage from '@/pages/Login';
+import Account from '@/pages/Account';
+import RequireCustomerAuth from '@/RequireCustomerAuth';
 
 function HomePage() {
   return (
@@ -36,12 +40,18 @@ function HomePage() {
 function App() {
   return (
     <BrowserRouter>
-      <CartProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/admin/*" element={<AdminRouter />} />
-        </Routes>
-      </CartProvider>
+      <CustomerAuthProvider>
+        <CartProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<RequireCustomerAuth />}>
+              <Route path="/account" element={<Account />} />
+            </Route>
+            <Route path="/admin/*" element={<AdminRouter />} />
+          </Routes>
+        </CartProvider>
+      </CustomerAuthProvider>
     </BrowserRouter>
   );
 }

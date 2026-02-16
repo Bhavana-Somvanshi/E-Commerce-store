@@ -1,31 +1,20 @@
-import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node';
+import pg from 'pg';
 
-export interface User {
-  id: string;
-  email: string;
-  passwordHash: string;
-  role: 'admin' | 'manager' | 'staff';
-  createdAt: string;
+const { Pool } = pg;
+
+const connectionString =
+  process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/kimi_admin';
+
+export const pool = new Pool({ connectionString });
+
+export async function query<T = unknown>(text: string, params?: unknown[]) {
+  const result = await pool.query<T>(text, params);
+  return result;
 }
 
-export interface RefreshToken {
-  jti: string;
-  userId: string;
-  expiresAt: string;
-  revokedAt?: string;
+export async function ensureConnection() {
+  const client = await pool.connect();
+  client.release();
 }
 
-export interface DbData {
-  users: User[];
-  refreshTokens: RefreshToken[];
-}
-
-const adapter = new JSONFile<DbData>('db.json');
-export const db = new Low<DbData>(adapter, { users: [], refreshTokens: [] });
-
-export async function initDb() {
-  await db.read();
-  db.data ||= { users: [], refreshTokens: [] };
-  await db.write();
-}
+ 

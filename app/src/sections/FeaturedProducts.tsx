@@ -1,17 +1,33 @@
 import { ShoppingBag, Star, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { products } from '@/data/products';
+import { products as fallbackProducts } from '@/data/products';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useState } from 'react';
+import { usePublicApi } from '@/hooks/usePublicApi';
+import type { Product } from '@/types';
 
 export default function FeaturedProducts() {
   const { addToCart, setIsCartOpen } = useCart();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const featuredProducts = products.filter((p) => p.isFeatured);
+  const apiProducts = usePublicApi<Partial<Product>[]>('/products', fallbackProducts);
+  const featuredProducts = apiProducts
+    .map((p) => ({
+      id: String(p.id),
+      name: p.name ?? 'Product',
+      price: Number(p.price ?? 0),
+      image: p.image ?? '/images/product-sneakers.jpg',
+      category: p.category ?? 'General',
+      rating: p.rating ?? 4.7,
+      reviews: p.reviews ?? 0,
+      isNew: p.isNew ?? false,
+      isFeatured: p.isFeatured ?? true,
+      originalPrice: p.originalPrice,
+    }))
+    .filter((p) => p.isFeatured);
 
-  const handleAddToCart = (product: typeof products[0]) => {
+  const handleAddToCart = (product: Product) => {
     addToCart(product);
     setIsCartOpen(true);
   };

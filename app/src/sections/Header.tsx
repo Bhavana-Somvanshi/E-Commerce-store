@@ -3,11 +3,14 @@ import { ShoppingBag, Search, Menu, X, Minus, Plus, Trash2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext';
 import { navLinks } from '@/data/products';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Link } from 'react-router-dom';
+import { useCustomerAuth } from '@/context/CustomerAuthContext';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, items, totalPrice, updateQuantity, removeFromCart, isCartOpen, setIsCartOpen } = useCart();
+  const { user } = useCustomerAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +55,12 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
+            <Link
+              to={user ? '/account' : '/login'}
+              className="hidden lg:inline-flex items-center px-4 py-2 text-sm font-medium text-[#333] border border-gray-200 rounded-full hover:border-[#ff4b2f] hover:text-[#ff4b2f] transition-colors"
+            >
+              {user ? 'My Account' : 'Sign In'}
+            </Link>
             <button
               className="p-2 hover:bg-black/5 rounded-full transition-colors"
               aria-label="Search"
@@ -182,6 +191,13 @@ export default function Header() {
                 {link.label}
               </a>
             ))}
+            <Link
+              to={user ? '/account' : '/login'}
+              className="py-2 px-4 text-[#333] hover:bg-black/5 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {user ? 'My Account' : 'Sign In'}
+            </Link>
           </nav>
         </div>
       </div>

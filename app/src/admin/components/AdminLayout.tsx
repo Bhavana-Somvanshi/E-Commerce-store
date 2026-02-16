@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -7,6 +7,8 @@ import {
   Users,
   BarChart3,
   Settings,
+  BookOpen,
+  Star,
   Menu,
   X,
   Bell,
@@ -15,14 +17,17 @@ import {
   LogOut,
   Store,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/products', label: 'Products', icon: Package },
-  { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { path: '/admin/customers', label: 'Customers', icon: Users },
-  { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
+  { path: '/admin/products', label: 'Products', icon: Package, roles: ['admin', 'manager', 'staff'] },
+  { path: '/admin/blogs', label: 'Blogs', icon: BookOpen, roles: ['admin', 'manager', 'staff'] },
+  { path: '/admin/reviews', label: 'Reviews', icon: Star, roles: ['admin', 'manager', 'staff'] },
+  { path: '/admin/orders', label: 'Orders', icon: ShoppingCart, roles: ['admin', 'manager'] },
+  { path: '/admin/customers', label: 'Customers', icon: Users, roles: ['admin', 'manager'] },
+  { path: '/admin/analytics', label: 'Analytics', icon: BarChart3, roles: ['admin'] },
+  { path: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
 
 interface AdminLayoutProps {
@@ -33,6 +38,13 @@ export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/admin/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -57,7 +69,9 @@ export default function AdminLayout() {
 
           {/* Navigation */}
           <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
+            {navItems
+              .filter((item) => (user?.role ? item.roles.includes(user.role) : false))
+              .map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (
@@ -160,13 +174,14 @@ export default function AdminLayout() {
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </a>
-                  <a
-                    href="/"
-                    className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
