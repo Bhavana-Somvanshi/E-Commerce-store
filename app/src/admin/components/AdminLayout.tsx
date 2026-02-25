@@ -30,10 +30,6 @@ const navItems = [
   { path: '/admin/settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
 
-interface AdminLayoutProps {
-  children?: React.ReactNode;
-}
-
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -204,3 +200,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

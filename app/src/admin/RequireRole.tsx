@@ -7,7 +7,7 @@ export default function RequireRole({ roles }: { roles: Array<'admin' | 'manager
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500 text-sm">Checking permissions…</div>
+        <div className="text-gray-500 text-sm">Checking permissions...</div>
       </div>
     );
   }

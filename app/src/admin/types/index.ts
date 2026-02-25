@@ -8,7 +8,8 @@ export interface AdminProduct {
   image: string;
   status: 'active' | 'inactive' | 'out_of_stock' | 'low_stock';
   sales: number;
-  created_at: string;
+  created_at?: string;
+  createdAt?: string;
 }
 
 export interface OrderItem {
@@ -20,21 +21,33 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  customer_id: string;
+  customer_id?: string;
+  customer?: string;
+  email?: string;
   items: OrderItem[] | unknown;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  payment_status: 'pending' | 'paid' | 'refunded' | 'failed';
-  shipping_address: string;
-  created_at: string;
-  updated_at: string;
+  payment_status?: 'pending' | 'paid' | 'refunded' | 'failed';
+  paymentStatus?: 'pending' | 'paid' | 'refunded' | 'failed';
+  shipping_address?: string;
+  shippingAddress?: string;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
 }
 
 export interface Customer {
   id: string;
   email: string;
   name: string | null;
-  created_at: string;
+  created_at?: string;
+  phone?: string;
+  orders?: number;
+  totalSpent?: number;
+  joinedAt?: string;
+  lastOrder?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface SalesData {

@@ -117,7 +117,7 @@ export default function Customers() {
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-medium text-gray-900">
-                      {formatDate(customer.created_at)}
+                      {formatDate(customer.created_at ?? customer.joinedAt ?? new Date().toISOString())}
                     </p>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -186,7 +186,7 @@ export default function Customers() {
 
               <div className="bg-gray-50 p-4 rounded-lg text-center">
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatDate(selectedCustomer.created_at)}
+                  {formatDate(selectedCustomer.created_at ?? selectedCustomer.joinedAt ?? new Date().toISOString())}
                 </p>
                 <p className="text-sm text-gray-500">Joined</p>
               </div>
@@ -197,3 +197,4 @@ export default function Customers() {
     </div>
   );
 }
+

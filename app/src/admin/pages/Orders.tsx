@@ -41,7 +41,7 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = orders.filter((order) => {
-    const customer = customers.find((c) => c.id === order.customer_id);
+    const customer = customers.find((c) => c.id === (order.customer_id ?? ''));
     const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,17 +164,17 @@ export default function Orders() {
                   <td className="px-6 py-4">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {customers.find((c) => c.id === order.customer_id)?.name ??
-                          customers.find((c) => c.id === order.customer_id)?.email ??
+                        {customers.find((c) => c.id === (order.customer_id ?? ''))?.name ??
+                          customers.find((c) => c.id === (order.customer_id ?? ''))?.email ??
                           order.customer_id}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {customers.find((c) => c.id === order.customer_id)?.email ?? '—'}
+                        {customers.find((c) => c.id === (order.customer_id ?? ''))?.email ?? '-'}
                       </p>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
-                    {formatDate(order.created_at)}
+                    {formatDate(order.created_at ?? order.createdAt ?? new Date().toISOString())}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -289,7 +289,7 @@ export default function Orders() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-500">Order Date</p>
                   <p className="font-medium text-gray-900">
-                    {formatDate(selectedOrder.created_at)}
+                    {formatDate(selectedOrder.created_at ?? selectedOrder.createdAt ?? new Date().toISOString())}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -309,12 +309,12 @@ export default function Orders() {
                 <h4 className="font-semibold text-gray-900 mb-3">Customer Information</h4>
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                   <p className="font-medium text-gray-900">
-                    {customers.find((c) => c.id === selectedOrder.customer_id)?.name ??
-                      customers.find((c) => c.id === selectedOrder.customer_id)?.email ??
+                    {customers.find((c) => c.id === (selectedOrder.customer_id ?? ''))?.name ??
+                      customers.find((c) => c.id === (selectedOrder.customer_id ?? ''))?.email ??
                       selectedOrder.customer_id}
                   </p>
                   <p className="text-gray-600">
-                    {customers.find((c) => c.id === selectedOrder.customer_id)?.email ?? '—'}
+                    {customers.find((c) => c.id === (selectedOrder.customer_id ?? ''))?.email ?? '-'}
                   </p>
                   <p className="text-gray-600">{selectedOrder.shipping_address}</p>
                 </div>
@@ -406,3 +406,6 @@ export default function Orders() {
     </div>
   );
 }
+
+
+
