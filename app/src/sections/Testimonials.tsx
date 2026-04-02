@@ -66,7 +66,7 @@ export default function Testimonials() {
                   <div className="bg-[#f9f9f9] rounded-2xl p-8 md:p-10 h-full flex flex-col items-center text-center">
                     {/* Avatar */}
                     <img
-                      src={testimonial.avatar}
+                      src={testimonial.avatar ?? '/images/testimonial-1.jpg'}
                       alt={testimonial.name}
                       className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md mb-4"
                     />

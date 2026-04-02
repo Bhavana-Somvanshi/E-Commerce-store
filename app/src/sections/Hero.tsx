@@ -1,15 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 export default function Hero() {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded] = useState(true);
   const imageRef = useRef<HTMLDivElement>(null);
   const { ref: contentRef } = useScrollAnimation({ threshold: 0.2 });
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#fff5f3] via-white to-[#fff9f7]">

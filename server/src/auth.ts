@@ -6,8 +6,16 @@ import { query } from './db.js';
 const ACCESS_TTL_SECONDS = 60 * 15;
 const REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
 
-const jwtSecret = process.env.JWT_SECRET || 'dev_access_secret';
-const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret';
+function requireEnv(name: string) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} environment variable is required.`);
+  }
+  return value;
+}
+
+const jwtSecret = requireEnv('JWT_SECRET');
+const jwtRefreshSecret = requireEnv('JWT_REFRESH_SECRET');
 
 export type UserType = 'admin' | 'customer';
 export type AdminRole = 'admin' | 'manager' | 'staff';

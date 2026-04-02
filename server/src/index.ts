@@ -29,6 +29,66 @@ type AuthedRequest = express.Request & {
   auth?: { userId: string; type: UserType; role?: AdminRole };
 };
 
+type AsyncHandler = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => Promise<void | express.Response>;
+
+type CheckoutItemInput = {
+  productId: string;
+  quantity: number;
+};
+
+type ProductLookupRow = {
+  id: string;
+  name: string;
+  price: string;
+  status: string;
+  stock: number;
+};
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function asyncHandler(handler: AsyncHandler): express.RequestHandler {
+  return (req, res, next) => {
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
+}
+
+function normalizeCheckoutItems(value: unknown) {
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const merged = new Map<string, number>();
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      return null;
+    }
+
+    const { productId, quantity } = item as Partial<CheckoutItemInput>;
+    if (
+      typeof productId !== 'string' ||
+      !uuidPattern.test(productId) ||
+      typeof quantity !== 'number' ||
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) {
+      return null;
+    }
+
+    merged.set(productId, (merged.get(productId) ?? 0) + quantity);
+  }
+
+  return Array.from(merged.entries()).map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
+}
+
 function requireAuth(req: AuthedRequest, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
@@ -76,7 +136,7 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', asyncHandler(async (req, res) => {
   const { email, password } = req.body ?? {};
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password required.' });
@@ -99,9 +159,9 @@ app.post('/auth/login', async (req, res) => {
     refreshToken,
     user: { id: user.id, email: user.email, role: user.role },
   });
-});
+}));
 
-app.post('/auth/customer/login', async (req, res) => {
+app.post('/auth/customer/login', asyncHandler(async (req, res) => {
   const { email, password } = req.body ?? {};
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password required.' });
@@ -124,9 +184,9 @@ app.post('/auth/customer/login', async (req, res) => {
     refreshToken,
     user: { id: user.id, email: user.email, name: user.name },
   });
-});
+}));
 
-app.post('/auth/customer/register', async (req, res) => {
+app.post('/auth/customer/register', asyncHandler(async (req, res) => {
   const { email, password, name } = req.body ?? {};
   if (!email || !password || !name) {
     return res.status(400).json({ message: 'Name, email, and password required.' });
@@ -145,9 +205,9 @@ app.post('/auth/customer/register', async (req, res) => {
     refreshToken,
     user: { id: user.id, email: user.email, name: user.name },
   });
-});
+}));
 
-app.post('/auth/refresh', async (req, res) => {
+app.post('/auth/refresh', asyncHandler(async (req, res) => {
   const { refreshToken } = req.body ?? {};
   if (!refreshToken) {
     return res.status(400).json({ message: 'Refresh token required.' });
@@ -183,9 +243,9 @@ app.post('/auth/refresh', async (req, res) => {
   } catch {
     return res.status(401).json({ message: 'Invalid refresh token.' });
   }
-});
+}));
 
-app.post('/auth/logout', async (req, res) => {
+app.post('/auth/logout', asyncHandler(async (req, res) => {
   const { refreshToken } = req.body ?? {};
   if (!refreshToken) {
     return res.status(400).json({ message: 'Refresh token required.' });
@@ -199,9 +259,9 @@ app.post('/auth/logout', async (req, res) => {
     // ignore invalid token
   }
   res.json({ ok: true });
-});
+}));
 
-app.get('/auth/me', requireAuth, async (req: AuthedRequest, res) => {
+app.get('/auth/me', requireAuth, asyncHandler(async (req: AuthedRequest, res) => {
   const user = await getUserById(req.auth!.userId);
   if (!user) return res.status(401).json({ message: 'User not found.' });
   res.json({
@@ -211,27 +271,27 @@ app.get('/auth/me', requireAuth, async (req: AuthedRequest, res) => {
     type: user.type,
     name: user.name,
   });
-});
+}));
 
 // Admin: Products
 app.get(
   '/admin/products',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (_req, res) => {
+  asyncHandler(async (_req, res) => {
     const result = await query(
       `SELECT id, name, price, cost, stock, category, image, status, sales, created_at
        FROM products ORDER BY created_at DESC`
     );
     res.json(result.rows);
-  }
+  })
 );
 
 app.post(
   '/admin/products',
   requireAuth,
   requireAdminRole(['admin', 'manager']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { name, price, cost, stock, category, image, status } = req.body ?? {};
     if (!name || price == null || !category || !image || !status) {
       return res.status(400).json({ message: 'Missing required fields.' });
@@ -243,14 +303,14 @@ app.post(
       [name, price, cost ?? 0, stock ?? 0, category, image, status]
     );
     res.status(201).json(result.rows[0]);
-  }
+  })
 );
 
 app.put(
   '/admin/products/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, price, cost, stock, category, image, status } = req.body ?? {};
     const result = await query(
@@ -270,21 +330,21 @@ app.put(
       return res.status(404).json({ message: 'Product not found.' });
     }
     res.json(result.rows[0]);
-  }
+  })
 );
 
 app.delete(
   '/admin/products/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const result = await query(`DELETE FROM products WHERE id = $1 RETURNING id`, [id]);
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Product not found.' });
     }
     res.json({ ok: true });
-  }
+  })
 );
 
 // Admin: Blogs
@@ -292,20 +352,20 @@ app.get(
   '/admin/blogs',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (_req, res) => {
+  asyncHandler(async (_req, res) => {
     const result = await query(
       `SELECT id, title, excerpt, content, image, category, published, created_at
        FROM blogs ORDER BY created_at DESC`
     );
     res.json(result.rows);
-  }
+  })
 );
 
 app.post(
   '/admin/blogs',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { title, excerpt, content, image, category, published } = req.body ?? {};
     if (!title || !excerpt || !content || !image || !category) {
       return res.status(400).json({ message: 'Missing required fields.' });
@@ -317,14 +377,14 @@ app.post(
       [title, excerpt, content, image, category, published ?? true]
     );
     res.status(201).json(result.rows[0]);
-  }
+  })
 );
 
 app.put(
   '/admin/blogs/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { title, excerpt, content, image, category, published } = req.body ?? {};
     const result = await query(
@@ -343,21 +403,21 @@ app.put(
       return res.status(404).json({ message: 'Blog not found.' });
     }
     res.json(result.rows[0]);
-  }
+  })
 );
 
 app.delete(
   '/admin/blogs/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const result = await query(`DELETE FROM blogs WHERE id = $1 RETURNING id`, [id]);
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Blog not found.' });
     }
     res.json({ ok: true });
-  }
+  })
 );
 
 // Admin: Reviews
@@ -365,20 +425,20 @@ app.get(
   '/admin/reviews',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (_req, res) => {
+  asyncHandler(async (_req, res) => {
     const result = await query(
       `SELECT id, name, rating, text, avatar, published, created_at
        FROM reviews ORDER BY created_at DESC`
     );
     res.json(result.rows);
-  }
+  })
 );
 
 app.post(
   '/admin/reviews',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { name, rating, text, avatar, published } = req.body ?? {};
     if (!name || !rating || !text) {
       return res.status(400).json({ message: 'Missing required fields.' });
@@ -390,14 +450,14 @@ app.post(
       [name, rating, text, avatar ?? null, published ?? true]
     );
     res.status(201).json(result.rows[0]);
-  }
+  })
 );
 
 app.put(
   '/admin/reviews/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, rating, text, avatar, published } = req.body ?? {};
     const result = await query(
@@ -415,21 +475,21 @@ app.put(
       return res.status(404).json({ message: 'Review not found.' });
     }
     res.json(result.rows[0]);
-  }
+  })
 );
 
 app.delete(
   '/admin/reviews/:id',
   requireAuth,
   requireAdminRole(['admin', 'manager', 'staff']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const result = await query(`DELETE FROM reviews WHERE id = $1 RETURNING id`, [id]);
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Review not found.' });
     }
     res.json({ ok: true });
-  }
+  })
 );
 
 // Admin: Orders + Customers (view only for manager; admin full)
@@ -437,20 +497,20 @@ app.get(
   '/admin/orders',
   requireAuth,
   requireAdminRole(['admin', 'manager']),
-  async (_req, res) => {
+  asyncHandler(async (_req, res) => {
     const result = await query(
       `SELECT id, customer_id, status, payment_status, total, shipping_address, items, created_at, updated_at
        FROM orders ORDER BY created_at DESC`
     );
     res.json(result.rows);
-  }
+  })
 );
 
 app.patch(
   '/admin/orders/:id/status',
   requireAuth,
   requireAdminRole(['admin']),
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { status, paymentStatus } = req.body ?? {};
     const result = await query(
@@ -466,69 +526,156 @@ app.patch(
       return res.status(404).json({ message: 'Order not found.' });
     }
     res.json(result.rows[0]);
-  }
+  })
 );
 
 app.get(
   '/admin/customers',
   requireAuth,
   requireAdminRole(['admin', 'manager']),
-  async (_req, res) => {
+  asyncHandler(async (_req, res) => {
     const result = await query(
       `SELECT id, email, name, created_at
        FROM users WHERE type = 'customer' ORDER BY created_at DESC`
     );
     res.json(result.rows);
-  }
+  })
 );
 
 // Public data for storefront
-app.get('/products', async (_req, res) => {
+app.get('/products', asyncHandler(async (_req, res) => {
   const result = await query(
     `SELECT id, name, price, image, category FROM products WHERE status = 'active'`
   );
   res.json(result.rows);
-});
+}));
 
-app.get('/blogs', async (_req, res) => {
+app.get('/blogs', asyncHandler(async (_req, res) => {
   const result = await query(
     `SELECT id, title, excerpt, image, category, created_at
      FROM blogs WHERE published = true ORDER BY created_at DESC`
   );
   res.json(result.rows);
-});
+}));
 
-app.get('/reviews', async (_req, res) => {
+app.get('/reviews', asyncHandler(async (_req, res) => {
   const result = await query(
     `SELECT id, name, rating, text, avatar
      FROM reviews WHERE published = true ORDER BY created_at DESC`
   );
   res.json(result.rows);
-});
+}));
+
+app.post(
+  '/orders/checkout',
+  requireAuth,
+  requireUserType('customer'),
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const { shippingAddress, items } = req.body ?? {};
+    const normalizedItems = normalizeCheckoutItems(items);
+
+    if (typeof shippingAddress !== 'string' || shippingAddress.trim().length < 10 || !normalizedItems) {
+      return res.status(400).json({ message: 'Valid shipping address and cart items are required.' });
+    }
+
+    const productIds = normalizedItems.map((item) => item.productId);
+    const productResult = await query<ProductLookupRow>(
+      `SELECT id, name, price::text, status, stock
+       FROM products
+       WHERE id = ANY($1::uuid[])`,
+      [productIds]
+    );
+
+    if (productResult.rows.length !== productIds.length) {
+      return res.status(400).json({ message: 'One or more cart items are no longer available.' });
+    }
+
+    const productsById = new Map(productResult.rows.map((product) => [product.id, product]));
+    const unavailableItem = normalizedItems.find((item) => {
+      const product = productsById.get(item.productId);
+      return !product || product.status !== 'active' || product.stock < item.quantity;
+    });
+    if (unavailableItem) {
+      return res.status(400).json({ message: 'One or more cart items are unavailable for checkout.' });
+    }
+
+    const orderItems = normalizedItems.map((item) => {
+      const product = productsById.get(item.productId)!;
+      return {
+        productId: product.id,
+        name: product.name,
+        quantity: item.quantity,
+        price: Number(product.price),
+      };
+    });
+
+    const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const result = await query(
+      `INSERT INTO orders (customer_id, status, payment_status, total, shipping_address, items)
+       VALUES ($1, 'pending', 'pending', $2, $3, $4::jsonb)
+       RETURNING id, customer_id, status, payment_status, total, shipping_address, items, created_at, updated_at`,
+      [req.auth!.userId, total.toFixed(2), shippingAddress.trim(), JSON.stringify(orderItems)]
+    );
+
+    for (const item of orderItems) {
+      await query(
+        `UPDATE products
+         SET stock = stock - $2,
+             sales = sales + $2,
+             status = CASE
+               WHEN stock - $2 <= 0 THEN 'out_of_stock'
+               WHEN stock - $2 <= 10 THEN 'low_stock'
+               ELSE 'active'
+             END
+         WHERE id = $1`,
+        [item.productId, item.quantity]
+      );
+    }
+
+    res.status(201).json(result.rows[0]);
+  })
+);
 
 // Customer profile + orders
-app.get('/me', requireAuth, requireUserType('customer'), async (req: AuthedRequest, res) => {
+app.get('/me', requireAuth, requireUserType('customer'), asyncHandler(async (req: AuthedRequest, res) => {
   const user = await getUserById(req.auth!.userId);
   if (!user) return res.status(401).json({ message: 'User not found.' });
   res.json({ id: user.id, email: user.email, name: user.name });
-});
+}));
 
-app.get('/me/orders', requireAuth, requireUserType('customer'), async (req: AuthedRequest, res) => {
+app.get('/me/orders', requireAuth, requireUserType('customer'), asyncHandler(async (req: AuthedRequest, res) => {
   const result = await query(
     `SELECT id, status, payment_status, total, shipping_address, items, created_at, updated_at
      FROM orders WHERE customer_id = $1 ORDER BY created_at DESC`,
     [req.auth!.userId]
   );
   res.json(result.rows);
-});
+}));
 
 async function seedAdminUsers() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const managerEmail = process.env.MANAGER_EMAIL || 'manager@example.com';
-  const managerPassword = process.env.MANAGER_PASSWORD || 'manager123';
-  const staffEmail = process.env.STAFF_EMAIL || 'staff@example.com';
-  const staffPassword = process.env.STAFF_PASSWORD || 'staff123';
+  if (process.env.ENABLE_ADMIN_BOOTSTRAP !== 'true') {
+    return;
+  }
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const managerEmail = process.env.MANAGER_EMAIL;
+  const managerPassword = process.env.MANAGER_PASSWORD;
+  const staffEmail = process.env.STAFF_EMAIL;
+  const staffPassword = process.env.STAFF_PASSWORD;
+
+  if (
+    !adminEmail ||
+    !adminPassword ||
+    !managerEmail ||
+    !managerPassword ||
+    !staffEmail ||
+    !staffPassword
+  ) {
+    throw new Error(
+      'ENABLE_ADMIN_BOOTSTRAP=true requires ADMIN_EMAIL, ADMIN_PASSWORD, MANAGER_EMAIL, MANAGER_PASSWORD, STAFF_EMAIL, and STAFF_PASSWORD.'
+    );
+  }
 
   await ensureAdminUser(adminEmail, adminPassword, 'admin');
   await ensureAdminUser(managerEmail, managerPassword, 'manager');
@@ -546,4 +693,9 @@ async function start() {
 start().catch((err) => {
   console.error('Failed to start server', err);
   process.exit(1);
+});
+
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Unhandled request error', err);
+  res.status(500).json({ message: 'Internal server error.' });
 });

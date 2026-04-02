@@ -26,8 +26,7 @@ export default function LoginPage() {
       const from = (location.state as { from?: string })?.from || '/account';
       navigate(from, { replace: true });
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Unable to continue.';
+      const message = err instanceof Error ? err.message : 'Unable to continue.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -49,9 +48,7 @@ export default function LoginPage() {
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
               <input
                 type="text"
                 required
@@ -62,9 +59,7 @@ export default function LoginPage() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               required
@@ -74,9 +69,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
               required
@@ -99,11 +92,11 @@ export default function LoginPage() {
           >
             {isSubmitting
               ? mode === 'login'
-                ? 'Signing in…'
-                : 'Creating account…'
+                ? 'Signing in...'
+                : 'Creating account...'
               : mode === 'login'
-              ? 'Sign In'
-              : 'Create Account'}
+                ? 'Sign In'
+                : 'Create Account'}
           </button>
         </form>
 

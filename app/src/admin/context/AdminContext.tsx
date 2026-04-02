@@ -55,7 +55,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [blogs, setBlogs] = useState<AdminBlog[]>([]);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
 
-  const loadAll = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     const requests: Array<Promise<Response>> = [];
     requests.push(authFetch(`${API_URL}/admin/products`));
     requests.push(authFetch(`${API_URL}/admin/blogs`));
@@ -68,27 +68,85 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
     const responses = await Promise.all(requests);
     const [productsRes, blogsRes, reviewsRes, ordersRes, customersRes] = responses;
+    const nextData: {
+      products?: AdminProduct[];
+      orders?: Order[];
+      customers?: Customer[];
+      blogs?: AdminBlog[];
+      reviews?: AdminReview[];
+    } = {};
 
     if (productsRes.ok) {
-      setProducts(await productsRes.json());
+      nextData.products = await productsRes.json();
     }
     if (ordersRes?.ok) {
-      setOrders(await ordersRes.json());
+      nextData.orders = await ordersRes.json();
     }
     if (customersRes?.ok) {
-      setCustomers(await customersRes.json());
+      nextData.customers = await customersRes.json();
     }
     if (blogsRes.ok) {
-      setBlogs(await blogsRes.json());
+      nextData.blogs = await blogsRes.json();
     }
     if (reviewsRes.ok) {
-      setReviews(await reviewsRes.json());
+      nextData.reviews = await reviewsRes.json();
     }
+
+    return nextData;
   }, [authFetch, user?.role]);
 
+  const applyData = useCallback(
+    (data: {
+      products?: AdminProduct[];
+      orders?: Order[];
+      customers?: Customer[];
+      blogs?: AdminBlog[];
+      reviews?: AdminReview[];
+    }) => {
+      if (data.products) {
+        setProducts(data.products);
+      }
+      if (data.orders) {
+        setOrders(data.orders);
+      }
+      if (data.customers) {
+        setCustomers(data.customers);
+      }
+      if (data.blogs) {
+        setBlogs(data.blogs);
+      }
+      if (data.reviews) {
+        setReviews(data.reviews);
+      }
+    },
+    []
+  );
+
+  const loadAll = useCallback(async () => {
+    const data = await fetchAll();
+    applyData(data);
+  }, [applyData, fetchAll]);
+
   useEffect(() => {
-    loadAll().catch(() => null);
-  }, [loadAll]);
+    let cancelled = false;
+
+    const loadInitialData = async () => {
+      try {
+        const data = await fetchAll();
+        if (!cancelled) {
+          applyData(data);
+        }
+      } catch {
+        // Ignore initial load errors and keep existing state.
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyData, fetchAll]);
 
   const addProduct = useCallback(
     async (product: Omit<AdminProduct, 'id' | 'sales' | 'created_at'>) => {
@@ -264,9 +322,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       customers,
       blogs,
       reviews,
-      orders.length,
-      customers.length,
-      products.length,
       loadAll,
       addProduct,
       updateProduct,

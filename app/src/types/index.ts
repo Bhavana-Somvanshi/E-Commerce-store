@@ -25,7 +25,7 @@ export interface Category {
 export interface Testimonial {
   id: string;
   name: string;
-  avatar: string;
+  avatar: string | null;
   rating: number;
   text: string;
 }

@@ -8,19 +8,13 @@ export default function RequireCustomerAuth() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500 text-sm">Checking session…</div>
+        <div className="text-gray-500 text-sm">Checking session...</div>
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location.pathname }}
-      />
-    );
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;

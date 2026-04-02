@@ -6,8 +6,8 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,8 +20,7 @@ export default function Login() {
       const from = (location.state as { from?: string })?.from || '/admin';
       navigate(from, { replace: true });
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Unable to sign in.';
+      const message = err instanceof Error ? err.message : 'Unable to sign in.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -32,15 +31,11 @@ export default function Login() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Admin Sign In</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Use your admin credentials to continue.
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Use your admin credentials to continue.</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               required
@@ -50,9 +45,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
               required
@@ -73,7 +66,7 @@ export default function Login() {
             disabled={isSubmitting}
             className="w-full inline-flex items-center justify-center px-4 py-2 bg-[#ff4b2f] text-white rounded-lg hover:bg-[#e63e24] transition-colors disabled:opacity-60"
           >
-            {isSubmitting ? 'Signing in…' : 'Sign In'}
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>

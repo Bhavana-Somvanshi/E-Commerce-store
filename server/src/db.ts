@@ -3,8 +3,11 @@ import type { QueryResultRow } from 'pg';
 
 const { Pool } = pg;
 
-const connectionString =
-  process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_2PU6DjJXdrky@ep-shiny-heart-aiy49f35-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require';
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is required.');
+}
 
 export const pool = new Pool({ connectionString });
 

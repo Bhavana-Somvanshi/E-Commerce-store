@@ -11,7 +11,7 @@ export default function Blog() {
     ...post,
     date:
       post.date ??
-      new Date(post.created_at ?? Date.now()).toLocaleDateString('en-US', {
+      new Date(post.created_at ?? '2024-01-01T00:00:00.000Z').toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
