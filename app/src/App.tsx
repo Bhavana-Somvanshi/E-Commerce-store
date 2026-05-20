@@ -15,6 +15,9 @@ import Footer from '@/sections/Footer';
 import AdminRouter from './admin/AdminRouter';
 import LoginPage from '@/pages/Login';
 import Account from '@/pages/Account';
+import ProductsCatalog from '@/pages/ProductsCatalog';
+import BlogCatalog from '@/pages/BlogCatalog';
+import BlogArticle from '@/pages/BlogArticle';
 import RequireCustomerAuth from '@/RequireCustomerAuth';
 
 function HomePage() {
@@ -44,6 +47,9 @@ function App() {
         <CartProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductsCatalog />} />
+            <Route path="/blog" element={<BlogCatalog />} />
+            <Route path="/blog/:id" element={<BlogArticle />} />
             <Route path="/login" element={<LoginPage />} />
             <Route element={<RequireCustomerAuth />}>
               <Route path="/account" element={<Account />} />

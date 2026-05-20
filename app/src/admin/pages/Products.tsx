@@ -52,6 +52,8 @@ export default function Products() {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+  const formatMoney = (value: number | string) => Number(value || 0).toFixed(2);
+
   const handleSort = (field: 'name' | 'price' | 'stock') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -156,6 +158,9 @@ export default function Products() {
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
+                  Rating
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
                   Sales
                 </th>
                 <th className="px-6 py-4 text-right text-sm font-medium text-gray-700">
@@ -182,10 +187,10 @@ export default function Products() {
                   <td className="px-6 py-4">
                     <div>
                       <p className="font-medium text-gray-900">
-                        ${product.price.toFixed(2)}
+                        ${formatMoney(product.price)}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Cost: ${product.cost.toFixed(2)}
+                        Cost: ${formatMoney(product.cost)}
                       </p>
                     </div>
                   </td>
@@ -201,6 +206,12 @@ export default function Products() {
                     >
                       {product.stock}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{Number(product.rating).toFixed(1)} / 5</p>
+                      <p className="text-sm text-gray-500">{Number(product.reviews)} reviews</p>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -288,14 +299,24 @@ export default function Products() {
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-500">Price</p>
                   <p className="font-semibold text-gray-900">
-                    ${selectedProduct.price.toFixed(2)}
+                    ${formatMoney(selectedProduct.price)}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-500">Cost</p>
                   <p className="font-semibold text-gray-900">
-                    ${selectedProduct.cost.toFixed(2)}
+                    ${formatMoney(selectedProduct.cost)}
                   </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500">Rating</p>
+                  <p className="font-semibold text-gray-900">
+                    {Number(selectedProduct.rating).toFixed(1)} / 5
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500">Reviews</p>
+                  <p className="font-semibold text-gray-900">{Number(selectedProduct.reviews)}</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-500">Stock</p>

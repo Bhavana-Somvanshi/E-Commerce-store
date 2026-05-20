@@ -26,9 +26,14 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT NOT NULL,
   image TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('active', 'inactive', 'out_of_stock', 'low_stock')),
+  rating NUMERIC(2, 1) NOT NULL DEFAULT 4.5,
+  reviews_count INT NOT NULL DEFAULT 0,
   sales INT NOT NULL DEFAULT 0,
   created_at DATE NOT NULL DEFAULT CURRENT_DATE
 );
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS rating NUMERIC(2, 1) NOT NULL DEFAULT 4.5;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reviews_count INT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS blogs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

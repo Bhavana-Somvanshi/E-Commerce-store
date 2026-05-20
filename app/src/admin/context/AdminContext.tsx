@@ -48,14 +48,37 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const { authFetch, user } = useAuth();
+  const { authFetch, user, isLoading } = useAuth();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [blogs, setBlogs] = useState<AdminBlog[]>([]);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
 
+  const normalizeProduct = useCallback((product: AdminProduct) => {
+    return {
+      ...product,
+      price: Number(product.price),
+      cost: Number(product.cost),
+      stock: Number(product.stock),
+      rating: Number(product.rating),
+      reviews: Number(product.reviews),
+      sales: Number(product.sales),
+    };
+  }, []);
+
+  const normalizeOrder = useCallback((order: Order) => {
+    return {
+      ...order,
+      total: Number(order.total),
+    };
+  }, []);
+
   const fetchAll = useCallback(async () => {
+    if (isLoading || !user) {
+      return {};
+    }
+
     const requests: Array<Promise<Response>> = [];
     requests.push(authFetch(`${API_URL}/admin/products`));
     requests.push(authFetch(`${API_URL}/admin/blogs`));
@@ -77,10 +100,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     } = {};
 
     if (productsRes.ok) {
-      nextData.products = await productsRes.json();
+      nextData.products = ((await productsRes.json()) as AdminProduct[]).map(normalizeProduct);
     }
     if (ordersRes?.ok) {
-      nextData.orders = await ordersRes.json();
+      nextData.orders = ((await ordersRes.json()) as Order[]).map(normalizeOrder);
     }
     if (customersRes?.ok) {
       nextData.customers = await customersRes.json();
@@ -93,7 +116,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
 
     return nextData;
-  }, [authFetch, user?.role]);
+  }, [authFetch, isLoading, normalizeOrder, normalizeProduct, user, user?.role]);
 
   const applyData = useCallback(
     (data: {
@@ -128,6 +151,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, [applyData, fetchAll]);
 
   useEffect(() => {
+    if (isLoading || !user) {
+      return;
+    }
+
     let cancelled = false;
 
     const loadInitialData = async () => {
@@ -146,7 +173,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [applyData, fetchAll]);
+  }, [applyData, fetchAll, isLoading, user]);
 
   const addProduct = useCallback(
     async (product: Omit<AdminProduct, 'id' | 'sales' | 'created_at'>) => {
@@ -156,10 +183,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(product),
       });
       if (!res.ok) throw new Error('Failed to create product.');
-      const created = (await res.json()) as AdminProduct;
+      const created = normalizeProduct((await res.json()) as AdminProduct);
       setProducts((prev) => [created, ...prev]);
     },
-    [authFetch]
+    [authFetch, normalizeProduct]
   );
 
   const updateProduct = useCallback(
@@ -170,10 +197,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(updates),
       });
       if (!res.ok) throw new Error('Failed to update product.');
-      const updated = (await res.json()) as AdminProduct;
+      const updated = normalizeProduct((await res.json()) as AdminProduct);
       setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
     },
-    [authFetch]
+    [authFetch, normalizeProduct]
   );
 
   const deleteProduct = useCallback(
@@ -273,10 +300,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ status, paymentStatus }),
       });
       if (!res.ok) throw new Error('Failed to update order.');
-      const updated = (await res.json()) as Order;
+      const updated = normalizeOrder((await res.json()) as Order);
       setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
     },
-    [authFetch]
+    [authFetch, normalizeOrder]
   );
 
   const value = useMemo(

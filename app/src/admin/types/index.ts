@@ -7,6 +7,8 @@ export interface AdminProduct {
   category: string;
   image: string;
   status: 'active' | 'inactive' | 'out_of_stock' | 'low_stock';
+  rating: number;
+  reviews: number;
   sales: number;
   created_at?: string;
   createdAt?: string;

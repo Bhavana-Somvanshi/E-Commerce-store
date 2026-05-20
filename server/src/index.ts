@@ -48,6 +48,11 @@ type ProductLookupRow = {
   stock: number;
 };
 
+async function ensureSchema() {
+  await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS rating NUMERIC(2, 1) NOT NULL DEFAULT 4.5`);
+  await query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS reviews_count INT NOT NULL DEFAULT 0`);
+}
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -280,7 +285,7 @@ app.get(
   requireAdminRole(['admin', 'manager', 'staff']),
   asyncHandler(async (_req, res) => {
     const result = await query(
-      `SELECT id, name, price, cost, stock, category, image, status, sales, created_at
+      `SELECT id, name, price, cost, stock, category, image, status, rating, reviews_count AS reviews, sales, created_at
        FROM products ORDER BY created_at DESC`
     );
     res.json(result.rows);
@@ -292,15 +297,15 @@ app.post(
   requireAuth,
   requireAdminRole(['admin', 'manager']),
   asyncHandler(async (req, res) => {
-    const { name, price, cost, stock, category, image, status } = req.body ?? {};
+    const { name, price, cost, stock, category, image, status, rating, reviews } = req.body ?? {};
     if (!name || price == null || !category || !image || !status) {
       return res.status(400).json({ message: 'Missing required fields.' });
     }
     const result = await query(
-      `INSERT INTO products (name, price, cost, stock, category, image, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, name, price, cost, stock, category, image, status, sales, created_at`,
-      [name, price, cost ?? 0, stock ?? 0, category, image, status]
+      `INSERT INTO products (name, price, cost, stock, category, image, status, rating, reviews_count)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, name, price, cost, stock, category, image, status, rating, reviews_count AS reviews, sales, created_at`,
+      [name, price, cost ?? 0, stock ?? 0, category, image, status, rating ?? 4.5, reviews ?? 0]
     );
     res.status(201).json(result.rows[0]);
   })
@@ -312,7 +317,7 @@ app.put(
   requireAdminRole(['admin', 'manager']),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { name, price, cost, stock, category, image, status } = req.body ?? {};
+    const { name, price, cost, stock, category, image, status, rating, reviews } = req.body ?? {};
     const result = await query(
       `UPDATE products
        SET name = COALESCE($2, name),
@@ -321,10 +326,12 @@ app.put(
            stock = COALESCE($5, stock),
            category = COALESCE($6, category),
            image = COALESCE($7, image),
-           status = COALESCE($8, status)
+           status = COALESCE($8, status),
+           rating = COALESCE($9, rating),
+           reviews_count = COALESCE($10, reviews_count)
        WHERE id = $1
-       RETURNING id, name, price, cost, stock, category, image, status, sales, created_at`,
-      [id, name, price, cost, stock, category, image, status]
+       RETURNING id, name, price, cost, stock, category, image, status, rating, reviews_count AS reviews, sales, created_at`,
+      [id, name, price, cost, stock, category, image, status, rating, reviews]
     );
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'Product not found.' });
@@ -545,7 +552,10 @@ app.get(
 // Public data for storefront
 app.get('/products', asyncHandler(async (_req, res) => {
   const result = await query(
-    `SELECT id, name, price, image, category FROM products WHERE status = 'active'`
+    `SELECT id, name, price, image, category, rating, reviews_count AS reviews
+     FROM products
+     WHERE status = 'active'
+     ORDER BY created_at DESC`
   );
   res.json(result.rows);
 }));
@@ -556,6 +566,21 @@ app.get('/blogs', asyncHandler(async (_req, res) => {
      FROM blogs WHERE published = true ORDER BY created_at DESC`
   );
   res.json(result.rows);
+}));
+
+app.get('/blogs/:id', asyncHandler(async (req, res) => {
+  const result = await query(
+    `SELECT id, title, excerpt, content, image, category, created_at
+     FROM blogs
+     WHERE id = $1 AND published = true`,
+    [req.params.id]
+  );
+
+  if (!result.rows[0]) {
+    return res.status(404).json({ message: 'Blog post not found.' });
+  }
+
+  res.json(result.rows[0]);
 }));
 
 app.get('/reviews', asyncHandler(async (_req, res) => {
@@ -684,6 +709,7 @@ async function seedAdminUsers() {
 
 async function start() {
   await ensureConnection();
+  await ensureSchema();
   await seedAdminUsers();
   app.listen(port, () => {
     console.log(`Auth server running on http://localhost:${port}`);

@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Product, CartItem } from '@/types';
+
+const CART_STORAGE_KEY = 'storefront_cart_items';
 
 interface CartContextType {
   items: CartItem[];
@@ -16,8 +18,36 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
+    try {
+      const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (!savedCart) {
+        return [];
+      }
+
+      const parsedCart = JSON.parse(savedCart) as CartItem[];
+      if (!Array.isArray(parsedCart)) {
+        return [];
+      }
+
+      return parsedCart.map((item) => ({
+        ...item,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+      }));
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   const addToCart = useCallback((product: Product) => {
     setItems((prevItems) => {
